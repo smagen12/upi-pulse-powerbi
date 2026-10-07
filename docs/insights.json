@@ -1,0 +1,63 @@
+{
+  "period": [
+    "2024-04-01",
+    "2026-03-01"
+  ],
+  "national_months": 24,
+  "bank_month_rows": 1199,
+  "unique_banks": 70,
+  "latest_month": {
+    "Month": "2026-03-01",
+    "BanksLive": 705,
+    "Transactions": 22641110000.0,
+    "ValueINR": 29525420500000.0
+  },
+  "growth_from_first_month": 0.701828549179607,
+  "latest_mom": 0.1101750597474378,
+  "latest_yoy": 0.23711704662620736,
+  "latest_weighted_td": 0.002257374603056277,
+  "latest_estimated_td": 55113056.0,
+  "latest_top5_share": 0.5065696157269379,
+  "latest_hotspots": [
+    {
+      "Month": "2026-03-01",
+      "Bank": "STATE BANK OF INDIA",
+      "Attempts": 6262100000.0,
+      "ApprovedRate": 0.9197,
+      "BDRate": 0.0787,
+      "TDRate": 0.0016
+    },
+    {
+      "Month": "2026-03-01",
+      "Bank": "BARODA U.P. BANK",
+      "Attempts": 90100000.0,
+      "ApprovedRate": 0.8479000000000002,
+      "BDRate": 0.0505,
+      "TDRate": 0.1017
+    },
+    {
+      "Month": "2026-03-01",
+      "Bank": "CENTRAL BANK OF INDIA",
+      "Attempts": 409500000.0,
+      "ApprovedRate": 0.885,
+      "BDRate": 0.1061,
+      "TDRate": 0.0089
+    },
+    {
+      "Month": "2026-03-01",
+      "Bank": "BANK OF INDIA",
+      "Attempts": 725980000.0,
+      "ApprovedRate": 0.9128,
+      "BDRate": 0.08259999999999999,
+      "TDRate": 0.0046
+    },
+    {
+      "Month": "2026-03-01",
+      "Bank": "UNION BANK OF INDIA",
+      "Attempts": 1451370000.0,
+      "ApprovedRate": 0.9062,
+      "BDRate": 0.0917,
+      "TDRate": 0.002
+    }
+  ]
+}

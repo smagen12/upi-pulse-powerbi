@@ -1,0 +1,14 @@
+table Dim_Bank
+
+	column Bank
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Bank
+
+	partition Dim_Bank = m
+		mode: import
+		source =
+				let
+				    Source = Table.Distinct(Table.SelectColumns(Raw_Remitter, {"Bank"})),
+				    Sorted = Table.Sort(Source, {{"Bank", Order.Ascending}})
+				in Sorted

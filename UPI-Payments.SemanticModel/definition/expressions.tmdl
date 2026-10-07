@@ -1,0 +1,35 @@
+expression DataRoot = "C:/Users/maayi/Downloads/UPI-Payments-PBIP-Project/upi-payments-dashboard/data/raw" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	annotation PBI_ResultType = Text
+
+expression Raw_National =
+		let
+		    Source = Csv.Document(File.Contents(DataRoot & "/national_monthly.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+		    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+		    Trimmed = Table.TransformColumns(Headers, List.Transform(Table.ColumnNames(Headers), each {_, Text.Trim, type text})),
+		    NumberText = Table.TransformColumns(Trimmed, List.Transform({"BanksLive", "VolumeMn", "ValueCr"}, each {_, (v) => Number.FromText(Text.Replace(v, ",", ""), "en-US"), type number})),
+		    Typed = Table.TransformColumnTypes(NumberText, {{"Month", type date}, {"BanksLive", Int64.Type}}),
+		    Volume = Table.AddColumn(Typed, "Transactions", each [VolumeMn] * 1000000, type number),
+		    Value = Table.AddColumn(Volume, "ValueINR", each [ValueCr] * 10000000, type number),
+		    Selected = Table.SelectColumns(Value, {"Month", "BanksLive", "Transactions", "ValueINR"})
+		 in Selected
+	annotation PBI_ResultType = Table
+
+expression Raw_Remitter =
+		let
+		    Source = Csv.Document(File.Contents(DataRoot & "/remitter_monthly.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+		    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+		    Trimmed = Table.TransformColumns(Headers, List.Transform(Table.ColumnNames(Headers), each {_, Text.Trim, type text})),
+		    Volume = Table.TransformColumns(Trimmed, {{"VolumeMn", each Number.FromText(Text.Replace(_, ",", ""), "en-US") * 1000000, type number}}),
+		    Rates = Table.TransformColumns(Volume, List.Transform({"ApprovedPct", "BusinessDeclinePct", "TechnicalDeclinePct"}, each {_, (v) => Number.FromText(Text.Replace(v, "%", ""), "en-US") / 100, type number})),
+		    AliasSource = Csv.Document(File.Contents(DataRoot & "/bank_aliases.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+		    AliasHeaders = Table.PromoteHeaders(AliasSource, [PromoteAllScalars=true]),
+		    Aliases = Table.TransformColumns(AliasHeaders, {{"SourceBank", Text.Trim, type text}, {"CanonicalBank", Text.Trim, type text}}),
+		    Joined = Table.NestedJoin(Rates, {"Bank"}, Aliases, {"SourceBank"}, "Alias", JoinKind.LeftOuter),
+		    Expanded = Table.ExpandTableColumn(Joined, "Alias", {"CanonicalBank"}),
+		    NoMissingAliases = if List.Contains(Expanded[CanonicalBank], null) then error "Unmapped bank: update bank_aliases.csv" else Expanded,
+		    RemovedSource = Table.RemoveColumns(NoMissingAliases, {"Bank"}),
+		    BankNames = Table.RenameColumns(RemovedSource, {{"CanonicalBank", "Bank"}}),
+		    Typed = Table.TransformColumnTypes(BankNames, {{"Month", type date}}),
+		    Renamed = Table.RenameColumns(Typed, {{"VolumeMn", "Attempts"}, {"ApprovedPct", "ApprovedRate"}, {"BusinessDeclinePct", "BDRate"}, {"TechnicalDeclinePct", "TDRate"}})
+		 in Table.Group(Renamed, {"Month", "Bank"}, {{"Attempts", each List.Sum([Attempts]), type number}, {"ApprovedRate", each List.Sum(List.Transform(Table.ToRecords(_), (r) => r[Attempts] * r[ApprovedRate])) / List.Sum([Attempts]), type number}, {"BDRate", each List.Sum(List.Transform(Table.ToRecords(_), (r) => r[Attempts] * r[BDRate])) / List.Sum([Attempts]), type number}, {"TDRate", each List.Sum(List.Transform(Table.ToRecords(_), (r) => r[Attempts] * r[TDRate])) / List.Sum([Attempts]), type number}})
+	annotation PBI_ResultType = Table

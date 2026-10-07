@@ -1,0 +1,9 @@
+*.pbix
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+**/.pbi/unappliedChanges.json
+.cache/
+**/.cache/
+__pycache__/
+.venv/
+.DS_Store

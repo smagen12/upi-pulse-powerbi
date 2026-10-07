@@ -1,0 +1,19 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+ref table Dim_Date
+ref table Dim_Bank
+ref table Fact_National
+ref table Fact_Remitter
+
+ref expression DataRoot
+ref expression Raw_National
+ref expression Raw_Remitter

@@ -1,0 +1,41 @@
+table Dim_Date
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		summarizeBy: none
+		sourceColumn: Date
+		formatString: yyyy-MM-dd
+		isKey
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: Year
+
+	column MonthKey
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: MonthKey
+
+	column MonthLabel
+		dataType: string
+		summarizeBy: none
+		sourceColumn: MonthLabel
+		sortByColumn: MonthKey
+
+	partition Dim_Date = m
+		mode: import
+		source =
+				let
+				    Start = Date.StartOfYear(List.Min(Raw_National[Month])),
+				    End = Date.EndOfYear(List.Max(Raw_National[Month])),
+				    Dates = Table.FromList(List.Dates(Start, Duration.Days(End - Start) + 1, #duration(1,0,0,0)), Splitter.SplitByNothing(), {"Date"}),
+				    Typed = Table.TransformColumnTypes(Dates, {{"Date", type date}}),
+				    Year = Table.AddColumn(Typed, "Year", each Date.Year([Date]), Int64.Type),
+				    Key = Table.AddColumn(Year, "MonthKey", each Date.Year([Date])*100 + Date.Month([Date]), Int64.Type),
+				    Label = Table.AddColumn(Key, "MonthLabel", each Date.ToText([Date], "yyyy-MM", "en-US"), type text)
+				in Label

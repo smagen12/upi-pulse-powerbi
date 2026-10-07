@@ -1,0 +1,15 @@
+relationship 2da9d485-7311-5554-8131-44b9d2f1ca7e
+	fromColumn: Fact_National.Month
+	toColumn: Dim_Date.Date
+	crossFilteringBehavior: oneDirection
+
+relationship 294c491f-9325-5dd5-83c9-3ee78f4d156e
+	fromColumn: Fact_Remitter.Month
+	toColumn: Dim_Date.Date
+	crossFilteringBehavior: oneDirection
+
+relationship dc3ae6a7-f686-54c6-8296-7abdf62c2384
+	fromColumn: Fact_Remitter.Bank
+	toColumn: Dim_Bank.Bank
+	crossFilteringBehavior: oneDirection
+

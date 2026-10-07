@@ -1,0 +1,71 @@
+table Fact_National
+
+	measure 'Total Transactions' = SUM(Fact_National[Transactions])
+		formatString: #,0
+		displayFolder: Adoption
+
+	measure 'Total Value INR' = SUM(Fact_National[ValueINR])
+		formatString: ₹#,0
+		displayFolder: Adoption
+
+	measure 'Avg Transaction Value' = DIVIDE([Total Value INR], [Total Transactions])
+		formatString: ₹#,0.00
+		displayFolder: Adoption
+
+	measure 'Active Months' = DISTINCTCOUNT(Fact_National[Month])
+		formatString: 0
+		displayFolder: Coverage
+
+	measure 'Banks Live Latest' = VAR LastMonth = MAX(Fact_National[Month]) RETURN CALCULATE(MAX(Fact_National[BanksLive]), Fact_National[Month] = LastMonth)
+		formatString: 0
+		displayFolder: Coverage
+
+	measure 'MoM Growth %' = VAR CurrentMonth = MAX(Fact_National[Month]) VAR CurrentVolume = CALCULATE([Total Transactions], REMOVEFILTERS(Dim_Date), Fact_National[Month] = CurrentMonth) VAR PreviousVolume = CALCULATE([Total Transactions], REMOVEFILTERS(Dim_Date), Fact_National[Month] = EDATE(CurrentMonth, -1)) RETURN IF(NOT ISBLANK(CurrentVolume) && NOT ISBLANK(PreviousVolume), DIVIDE(CurrentVolume - PreviousVolume, PreviousVolume))
+		formatString: 0.00%
+		displayFolder: Growth
+
+	measure 'YoY Growth %' = VAR CurrentMonth = MAX(Fact_National[Month]) VAR CurrentVolume = CALCULATE([Total Transactions], REMOVEFILTERS(Dim_Date), Fact_National[Month] = CurrentMonth) VAR PreviousVolume = CALCULATE([Total Transactions], REMOVEFILTERS(Dim_Date), Fact_National[Month] = EDATE(CurrentMonth, -12)) RETURN IF(NOT ISBLANK(CurrentVolume) && NOT ISBLANK(PreviousVolume), DIVIDE(CurrentVolume - PreviousVolume, PreviousVolume))
+		formatString: 0.00%
+		displayFolder: Growth
+
+	measure 'Rolling 3 Month Avg' = VAR CurrentMonth = MAX(Fact_National[Month]) VAR WindowMonths = FILTER(ALL(Dim_Date), Dim_Date[Date] >= EDATE(CurrentMonth, -2) && Dim_Date[Date] <= EOMONTH(CurrentMonth, 0)) VAR MonthCount = CALCULATE(DISTINCTCOUNT(Fact_National[Month]), REMOVEFILTERS(Dim_Date), WindowMonths) RETURN IF(MonthCount = 3, DIVIDE(CALCULATE([Total Transactions], REMOVEFILTERS(Dim_Date), WindowMonths), 3))
+		formatString: #,0
+		displayFolder: Growth
+
+	measure 'Growth Status' = IF(ISBLANK([MoM Growth %]), BLANK(), IF([MoM Growth %] >= 0, 1, -1))
+		formatString: 0
+		displayFolder: Formatting
+
+	measure 'Average Daily Transactions' = VAR DayCount = SUMX(VALUES(Fact_National[Month]), DAY(EOMONTH(Fact_National[Month], 0))) RETURN DIVIDE([Total Transactions], DayCount)
+		formatString: #,0
+		displayFolder: Adoption
+
+	column Month
+		dataType: dateTime
+		isHidden
+		summarizeBy: none
+		sourceColumn: Month
+		formatString: yyyy-MM-dd
+
+	column BanksLive
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: BanksLive
+
+	column Transactions
+		dataType: double
+		isHidden
+		summarizeBy: none
+		sourceColumn: Transactions
+
+	column ValueINR
+		dataType: double
+		isHidden
+		summarizeBy: none
+		sourceColumn: ValueINR
+
+	partition Fact_National = m
+		mode: import
+		source =
+				Raw_National

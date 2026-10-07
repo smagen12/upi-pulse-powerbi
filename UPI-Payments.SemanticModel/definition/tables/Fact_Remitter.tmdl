@@ -1,0 +1,71 @@
+table Fact_Remitter
+
+	measure 'Bank Attempts' = SUM(Fact_Remitter[Attempts])
+		formatString: #,0
+		displayFolder: Reliability
+
+	measure 'Covered Banks' = DISTINCTCOUNT(Fact_Remitter[Bank])
+		formatString: 0
+		displayFolder: Coverage
+
+	measure 'Estimated Technical Declines' = SUMX(Fact_Remitter, Fact_Remitter[Attempts] * Fact_Remitter[TDRate])
+		formatString: #,0
+		displayFolder: Reliability
+
+	measure 'Technical Decline Rate %' = DIVIDE([Estimated Technical Declines], [Bank Attempts])
+		formatString: 0.00%
+		displayFolder: Reliability
+
+	measure 'Business Decline Rate %' = DIVIDE(SUMX(Fact_Remitter, Fact_Remitter[Attempts] * Fact_Remitter[BDRate]), [Bank Attempts])
+		formatString: 0.00%
+		displayFolder: Reliability
+
+	measure 'Approved Rate %' = DIVIDE(SUMX(Fact_Remitter, Fact_Remitter[Attempts] * Fact_Remitter[ApprovedRate]), [Bank Attempts])
+		formatString: 0.00%
+		displayFolder: Reliability
+
+	measure 'Top 5 Share %' = VAR CandidateBanks = ALLSELECTED(Dim_Bank[Bank]) VAR Ranked = TOPN(5, CandidateBanks, [Bank Attempts], DESC, Dim_Bank[Bank], ASC) RETURN DIVIDE(CALCULATE([Bank Attempts], KEEPFILTERS(Ranked)), CALCULATE([Bank Attempts], CandidateBanks))
+		formatString: 0.00%
+		displayFolder: Concentration
+
+	column Month
+		dataType: dateTime
+		isHidden
+		summarizeBy: none
+		sourceColumn: Month
+		formatString: yyyy-MM-dd
+
+	column Bank
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Bank
+
+	column Attempts
+		dataType: double
+		isHidden
+		summarizeBy: none
+		sourceColumn: Attempts
+
+	column ApprovedRate
+		dataType: double
+		isHidden
+		summarizeBy: none
+		sourceColumn: ApprovedRate
+
+	column BDRate
+		dataType: double
+		isHidden
+		summarizeBy: none
+		sourceColumn: BDRate
+
+	column TDRate
+		dataType: double
+		isHidden
+		summarizeBy: none
+		sourceColumn: TDRate
+
+	partition Fact_Remitter = m
+		mode: import
+		source =
+				Raw_Remitter
